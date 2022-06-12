@@ -7,15 +7,15 @@ extra-deps:
 - rest-rewrite-0.3.0
 - text-format-0.3.2
 - Diff-0.3.4
-- git: https://github.com/ucsd-progsys/liquidhaskell.git
-  commit: 4dbafc42400c67b8cd3a7316dbf2c618980c6f44
+- git: https://github.com/facundominguez/liquidhaskell.git
+  commit: 4c354c4d099f6fa47b624a857fca45f0a105fb01
   subdirs:
     - .
     - liquid-base
     - liquid-containers
     - liquid-ghc-prim
     - liquid-prelude
-- git: https://github.com/ucsd-progsys/liquid-fixpoint.git
-  commit: be84ca8375b731281e7baaf74b7f1e7137e68f55
+- git: https://github.com/facundominguez/liquid-fixpoint.git
+  commit: 7e18f70ede589c5f7f2e0b5a3bf38250938aee28
 
 allow-newer: true
