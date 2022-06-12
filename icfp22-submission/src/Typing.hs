@@ -242,7 +242,9 @@ lem_typSize_lb g e t (TVar2 n g' _ _ p_x_b _ _)   = lem_typSize_lb g' e t p_x_b
 lem_typSize_lb g e t (TVar3 n g' _ _ p_x_b _ _)   = lem_typSize_lb g' e t p_x_b
 lem_typSize_lb g e t (TPrm {})                    = ()
 lem_typSize_lb g e t (TAbs _ _ t_x _ _ e' t' nms mk_p_e'_txt')
-    = lem_typSize_lb (Cons y t_x g) (unbind y e') (unbindT y t') (mk_p_e'_txt' y)
+    = case t of
+        TRefn{} -> lem_typSize_lb (Cons y t_x g) (unbind y e') (unbindT y t') (mk_p_e'_txt' y)
+        _ -> lem_typSize_lb (Cons y t_x g) (unbind y e') (unbindT y t') (mk_p_e'_txt' y)
         where
           y = fresh_var nms g
 lem_typSize_lb g e t (TApp _ _ e1 t_x t' p_e1_txt' _ _)
@@ -385,17 +387,76 @@ subtypSize (SPoly n _ _ _ _ _ _)        = n + 1
 lem_subtypSize_lb :: Env -> Type -> Type -> Subtype -> Proof
 lem_subtypSize_lb g s t (SBase {}) = ()
 lem_subtypSize_lb g s t (SFunc _ _ s1 s2 p_s2_s1 t1 t2 nms mk_p_t1_t2)
-    = () ? lem_subtypSize_lb g s2 s1 p_s2_s1
+  = case t of
+    TRefn{} ->
+      case s of
+      TRefn{} ->
+        () ? lem_subtypSize_lb g s2 s1 p_s2_s1
          ? lem_subtypSize_lb (Cons y s2 g) (unbindT y t1) (unbindT y t2) (mk_p_t1_t2 y)
              where
                y = fresh_var nms g
-lem_subtypSize_lb g s t (SWitn _ _ v_x t_x p_vx_tx _ t' p_s_t'vx)
-    = () ? lem_subtypSize_lb g s (tsubBV v_x t') p_s_t'vx
-         ? lem_typSize_lb     g v_x t_x p_vx_tx
-lem_subtypSize_lb g s t (SBind _ _ s_x s' _ nms mk_p_s'_t)
-    = () ? lem_subtypSize_lb (Cons y s_x g) (unbindT y s') t (mk_p_s'_t y)
+      _ ->
+        () ? lem_subtypSize_lb g s2 s1 p_s2_s1
+         ? lem_subtypSize_lb (Cons y s2 g) (unbindT y t1) (unbindT y t2) (mk_p_t1_t2 y)
              where
                y = fresh_var nms g
+    _ ->
+      case s of
+      TRefn{} ->
+        () ? lem_subtypSize_lb g s2 s1 p_s2_s1
+         ? lem_subtypSize_lb (Cons y s2 g) (unbindT y t1) (unbindT y t2) (mk_p_t1_t2 y)
+             where
+               y = fresh_var nms g
+      _ ->
+        () ? lem_subtypSize_lb g s2 s1 p_s2_s1
+         ? lem_subtypSize_lb (Cons y s2 g) (unbindT y t1) (unbindT y t2) (mk_p_t1_t2 y)
+             where
+               y = fresh_var nms g
+
+lem_subtypSize_lb g s t (SWitn _ _ v_x t_x p_vx_tx _ t' p_s_t'vx)
+  = case t of
+    TRefn{} ->
+      case s of
+      TRefn{} ->
+        () ? lem_subtypSize_lb g s (tsubBV v_x t') p_s_t'vx
+           ? lem_typSize_lb     g v_x t_x p_vx_tx
+      _ ->
+        () ? lem_subtypSize_lb g s (tsubBV v_x t') p_s_t'vx
+           ? lem_typSize_lb     g v_x t_x p_vx_tx
+
+    _ ->
+      case s of
+      TRefn{} ->
+        () ? lem_subtypSize_lb g s (tsubBV v_x t') p_s_t'vx
+           ? lem_typSize_lb     g v_x t_x p_vx_tx
+      _ ->
+        () ? lem_subtypSize_lb g s (tsubBV v_x t') p_s_t'vx
+           ? lem_typSize_lb     g v_x t_x p_vx_tx
+
+lem_subtypSize_lb g s t (SBind _ _ s_x s' _ nms mk_p_s'_t)
+  = case t of
+    TRefn{} ->
+      case s of
+      TRefn{} ->
+        () ? lem_subtypSize_lb (Cons y s_x g) (unbindT y s') t (mk_p_s'_t y)
+             where
+               y = fresh_var nms g
+      _ ->
+        () ? lem_subtypSize_lb (Cons y s_x g) (unbindT y s') t (mk_p_s'_t y)
+             where
+               y = fresh_var nms g
+
+    _ ->
+      case s of
+      TRefn{} ->
+        () ? lem_subtypSize_lb (Cons y s_x g) (unbindT y s') t (mk_p_s'_t y)
+             where
+               y = fresh_var nms g
+      _ ->
+        () ? lem_subtypSize_lb (Cons y s_x g) (unbindT y s') t (mk_p_s'_t y)
+             where
+               y = fresh_var nms g
+
 lem_subtypSize_lb g s t (SPoly _ _ k t1 t2 nms mk_p_t1_t2)
     = () ? lem_subtypSize_lb (ConsT a k g) (unbind_tvT a t1) (unbind_tvT a t2) (mk_p_t1_t2 a)
              where

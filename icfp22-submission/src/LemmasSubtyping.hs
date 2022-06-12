@@ -128,8 +128,12 @@ lem_sub_pullback_wftype g p_g_wf s t p_s_t@(SFunc _ _ s_x t_x _ s' t' _ _) p_g_s
   = impossible ("by lemma" ? lem_wf_tfunc_star g t_x t' p_g_t)
 lem_sub_pullback_wftype g p_g_wf s t p_s_t@(SWitn _ _ v_x t_x p_vx_tx _s t' p_s_t'vx) 
                         p_g_s p_g_t
-  = lem_sub_pullback_wftype g p_g_wf s (tsubBV v_x t') p_s_t'vx p_g_s p_g_t'vx
-      where
+  = case t of
+      TRefn{} ->
+        lem_sub_pullback_wftype g p_g_wf s (tsubBV v_x t') p_s_t'vx p_g_s p_g_t'vx
+      _ ->
+        lem_sub_pullback_wftype g p_g_wf s (tsubBV v_x t') p_s_t'vx p_g_s p_g_t'vx
+  where
         (WFExis _ _tx k_x p_g_tx _ _ nms mk_p_wg_t')
                       = lem_wfexis_for_wf_texists g t_x t' Base p_g_t
         w             = fresh_var nms g
@@ -144,7 +148,13 @@ lem_sub_pullback_wftype g p_g_wf s t p_s_t@(SBind _ _ s_x s' _t nms mk_p_yg_s'_t
       where
         {-@ mk_p_wg_s'_b :: { w:Vname | NotElem w nms''}
               -> ProofOf(WFType (Cons w s_x g) (unbindT w s') Base)  @-}
-        mk_p_wg_s'_b w = lem_sub_pullback_wftype (Cons w s_x g) p_wg_wf (unbindT w s') t
+        mk_p_wg_s'_b w =
+            case s of
+              TRefn{} ->
+                lem_sub_pullback_wftype (Cons w s_x g) p_wg_wf (unbindT w s') t
+                                         (mk_p_yg_s'_t w) (mk_p_wg_s' w) p_wg_t
+              _ ->
+                lem_sub_pullback_wftype (Cons w s_x g) p_wg_wf (unbindT w s') t
                                          (mk_p_yg_s'_t w) (mk_p_wg_s' w) p_wg_t
           where
             p_wg_wf    = WFEBind g p_g_wf w s_x k_x p_g_sx
